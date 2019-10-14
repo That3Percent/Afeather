@@ -1,0 +1,20 @@
+[package]
+name = "afeather"
+version = "0.0.1"
+authors = ["That3Percent <that3percent@gmail.com>"]
+edition = "2018"
+
+description = "An ECS which stores similar entities together."
+homepage = "https://github.com/That3Percent/afeather"
+repository = "https://github.com/That3Percent/afeather"
+readme = "README.md"
+keywords = ["ecs"]
+categories = ["games"]
+license = "MIT"
+
+[badges]
+maintenance = { status = "experimental" }
+
+[dependencies]
+downcast-rs = "1.0.4"
+extend-lifetime="0.2.0"
