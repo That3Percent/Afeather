@@ -25,6 +25,12 @@ impl Archetype {
         result
     }
 
+	pub fn remove_entity(&mut self, index: usize) {
+		self.num_entities -= 1;
+		let top = self.num_entities;
+		self.components.remove_entity(index, top);
+	}
+
     pub fn get_storage<T: AnyStorage>(&self) -> Option<Rc<T>> {
         self.components.get_storage::<T>()
     }
@@ -36,21 +42,6 @@ impl Archetype {
     pub fn add_component<T: Component>(&mut self, storage: T::Storage) {
         self.components.add(storage);
     }
-
-    // TODO: Take ReadableStorage
-    /*
-    pub fn read_component<T: Component>(&self, index: usize) -> Option<&<<T as Component>::Storage as ReadableStorage>::Read> where T::Storage : ReadableStorage<Read=T> {
-        T::Storage::read(self, index)
-    }
-
-    pub fn read_component_mut<T: Component>(&self, index: usize) -> Option<&mut <<T as Component>::Storage as ReadableStorage>::Read> where T::Storage : WritableStorage<Read=T> {
-        T::Storage::read_mut(self, index)
-    }
-
-    pub fn read_component_batch<T: Component>(&self) -> Option<&<<T as Component>::Storage as ReadableStorage>::BatchRead> where T::Storage : ReadableStorage<Read=T> {
-        T::Storage::read_batch(self)
-    }
-    */
 }
 
 pub trait ArchetypeInitializer {
@@ -72,31 +63,6 @@ pub trait EntityWriter {
 // for that case is that the archetype and components would not need to be borrowed just to be filtered out,
 // allowing a higher degree of parallelism. This concern does not outweigh simplicity for now.
 
-impl ReadableStorage for () {
-    type Read = ();
-    #[inline(always)]
-    fn get(_world_storage: &Components, _archetype_storage: &Components) -> Option<Self::Read> {
-        Some(())
-    }
-}
-
-impl RefLike for () {
-    type Borrowed = ();
-    #[inline(always)]
-    fn borrow(&self) -> Self::Borrowed {}
-}
-
-impl<'a> BorrowedStorage for () {
-    type Item = ();
-    type Batch = ();
-    fn version(&self) -> Version {
-        Version(0)
-    }
-    fn read(&self, _index: usize) -> Option<Self::Item> {
-        Some(())
-    }
-    fn read_batch(&self) -> Self::Batch {}
-}
 
 impl<T: ReadableStorage> ReadableStorage for Option<T> {
     type Read = Option<T::Read>;

@@ -16,10 +16,25 @@ struct EntitySlot {
 
 // TODO: Rather than hiding methods on the world, wrap it in some kind of processor that has the schedule_query, schedule_update, etc methods.
 
+// TODO: Update / Version rules
+// 0. The World starts at Version(0)
+// 1. An update always runs.
+// 2. When an update runs, the world version number is increased by 1, and all components modified by add or mutate (but not delete) have their version set to this.
+// 3. When a query runs, it necessarily reads components.
+// 4. If a processed component is read and it's version is out of date, it runs the process to update the component.
+// 5. A component requires 2 versions - UpdatedAt, and CurrentAsOf.
+// 6. A process is stored on the component that it needs to update.
+
 pub struct World {
     archetypes: Vec<Option<Archetype>>,
     entities: HashMap<UniqueId, EntitySlot>,
     globals: Components,
+}
+
+impl Default for World {
+	fn default() -> Self {
+		Self::new()
+	}
 }
 
 impl World {
@@ -105,6 +120,28 @@ impl World {
         let slot = self.add_entity_inner(entity);
         self.entities.insert(unique_id, slot);
     }
+
+	pub fn remove_entity(&mut self, unique_id: UniqueId) {
+		let slot = self.entities.remove(&unique_id);
+		match slot {
+			Some(slot) => {
+				let archetype = &mut self.archetypes[slot.archetype_index];
+				match archetype {
+					Some(inner) => {
+						inner.remove_entity(slot.entity_index);
+						if inner.num_entities() == 0 {
+							*archetype = None;
+						}
+					},
+					None => unreachable!(),
+				}
+			},
+			None => {
+				#[cfg(debug_assertions)]
+				unreachable!();
+			}
+		}
+	}
 
     pub fn execute_query<T: Query>(&self, query: &T) -> T::Output {
         let query_data = QueryData::new(&self.globals, &self.archetypes);

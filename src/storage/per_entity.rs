@@ -73,7 +73,13 @@ impl<T> PerEntity<T> {
     }
 }
 
-impl<T: 'static> AnyStorage for PerEntity<T> {}
+impl<T: 'static> AnyStorage for PerEntity<T> {
+	fn remove_entity(&self, index: usize, top: usize) {
+		let mut borrow = self.borrow_mut();
+		borrow.values.swap_remove(index);
+		debug_assert!(top == borrow.values.len())
+	}
+}
 
 impl<T: 'static> ReadableStorage for PerEntity<T> {
     type Read = Rc<Self>;

@@ -46,7 +46,11 @@ impl<T> Global<T> {
     }
 }
 
-impl<T: 'static> AnyStorage for Global<T> {}
+impl<T: 'static> AnyStorage for Global<T> {
+	fn remove_entity(&self, _index: usize, _top: usize) {
+
+	}
+}
 
 impl<T: 'static> ReadableStorage for Global<T> {
     type Read = Rc<Self>;

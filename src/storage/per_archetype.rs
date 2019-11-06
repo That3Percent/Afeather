@@ -46,7 +46,10 @@ impl<T> PerArchetype<T> {
     }
 }
 
-impl<T: 'static> AnyStorage for PerArchetype<T> {}
+impl<T: 'static> AnyStorage for PerArchetype<T> {
+	#[inline]
+	fn remove_entity(&self, _index: usize, _top: usize) { }
+}
 
 impl<T: 'static> ReadableStorage for PerArchetype<T> {
     type Read = Rc<Self>;

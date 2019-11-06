@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 pub struct Components {
-    any: HashMap<TypeId, Rc<dyn AnyStorage>>,
+    pub any: HashMap<TypeId, Rc<dyn AnyStorage>>,
 }
 
 impl Components {
@@ -42,4 +42,10 @@ impl Components {
         );
         self.any.insert(id, Rc::new(storage));
     }
+
+	pub fn remove_entity(&mut self, index: usize, top: usize) {
+		for storage in self.any.values_mut() {
+			storage.remove_entity(index, top);
+		}
+	}
 }

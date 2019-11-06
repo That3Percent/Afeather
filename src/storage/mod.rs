@@ -5,7 +5,10 @@ use std::cell::{Ref, RefCell, RefMut};
 use std::ops::{Deref, DerefMut};
 use std::rc::Rc;
 
-pub trait AnyStorage: Downcast {}
+pub trait AnyStorage: Downcast {
+	fn remove_entity(&self, index: usize, top: usize);
+}
+
 impl_downcast!(AnyStorage);
 
 #[derive(Copy, Clone, Eq, Ord, PartialEq, PartialOrd, Hash)]
@@ -123,6 +126,10 @@ pub trait ReadableStorage {
 pub trait WritableStorage: ReadableStorage {
     type ReadMut: RefLikeMut;
     fn get_mut(archetype: &Archetype) -> Option<Self::ReadMut>;
+}
+
+pub trait EntityStorage {
+
 }
 
 // This and the other similar redirection traits are because the compiler is complaining about duplicate implementations of the trait

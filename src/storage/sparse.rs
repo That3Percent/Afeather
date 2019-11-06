@@ -38,6 +38,12 @@ impl<T: 'static> BorrowedStorage for BorrowedSparse<T> {
     }
 }
 
+impl<T> Default for Sparse<T> {
+	fn default() -> Self {
+		Self::new()
+	}
+}
+
 impl<T> Sparse<T> {
     pub fn new() -> Self {
         let cell = RefCell::new(BorrowedSparse::new());
@@ -45,7 +51,17 @@ impl<T> Sparse<T> {
     }
 }
 
-impl<T: 'static> AnyStorage for Sparse<T> {}
+impl<T: 'static> AnyStorage for Sparse<T> {
+	fn remove_entity(&self, index: usize, top: usize) {
+		let mut borrow = self.cell.borrow_mut();
+		let top = borrow.values.remove(&top);
+		if let Some(top) = top {
+			borrow.values.insert(index, top);
+		} else {
+			borrow.values.remove(&index);
+		}
+	}
+}
 
 impl<T: Component> ReadableStorage for Sparse<T> {
     type Read = Rc<Self>;
