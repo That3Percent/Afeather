@@ -12,9 +12,21 @@ keywords = ["ecs"]
 categories = ["games"]
 license = "MIT"
 
+[[bench]]
+name = "micro_process"
+harness = false
+
 [badges]
 maintenance = { status = "experimental" }
 
 [dependencies]
 downcast-rs = "1.0.4"
 extend-lifetime="0.2.0"
+
+[dependencies.unordered-hash]
+version="0.2.0"
+path = "../unordered-hash"
+
+[dev-dependencies]
+criterion = "0.3"
+

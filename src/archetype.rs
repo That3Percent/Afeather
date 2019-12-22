@@ -1,17 +1,19 @@
 use crate::*;
 use std::rc::Rc;
+use unordered_hash::UnorderedHasher;
 
 pub struct Archetype {
     num_entities: usize,
-    // TODO: Not pub
-    pub components: Components,
+    components: Components,
+	requirements: u64,
 }
 
 impl Archetype {
-    pub fn new() -> Self {
+    pub fn new(requirements: u64) -> Self {
         Self {
             num_entities: 0,
             components: Components::new(),
+			requirements
         }
     }
 
@@ -39,9 +41,17 @@ impl Archetype {
         self.components.get_storage_mut::<T>()
     }
 
-    pub fn add_component<T: Component>(&mut self, storage: T::Storage) {
+    pub fn add_storage<T: Component>(&mut self, storage: T::Storage) {
         self.components.add(storage);
     }
+
+	pub fn get_requirements(&self) -> u64 {
+		self.requirements
+	}
+
+	pub fn components(&self) -> &Components {
+		&self.components
+	}
 }
 
 pub trait ArchetypeInitializer {
@@ -54,6 +64,7 @@ pub trait ArchetypeFilter {
 
 pub trait EntityWriter {
     fn write(self, archetype: &mut Archetype, index: usize);
+	fn add_archetype_requirements(&self, hasher: &mut UnorderedHasher);
 }
 
 // TODO: The design here uses a static method, because we want to be able to simply specify the read/write

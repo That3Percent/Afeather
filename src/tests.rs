@@ -29,13 +29,13 @@ impl Component for SourceId {
     type Storage = PerArchetype<Self>;
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug, Hash)]
 struct SamplingRate(u8);
 impl Component for SamplingRate {
     type Storage = PerArchetype<Self>;
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Hash)]
 struct Kind(&'static str);
 impl Component for Kind {
     type Storage = PerArchetype<Self>;
@@ -144,7 +144,6 @@ fn can_execute_update() {
 
 // TODO: Add sparse zst to entity and ensure it stays in the same archetype, and will initialize the storage for the archetype
 // TODO: Add a sparse zst to an existing entity in an archetype which already has storage, and ensure that works as well.
-// TODO: Ensure that an entity with fewer components is not written to an entity with more components (the can_write_to and can_be_written_from go both ways)
 // TODO: A way to specify to initialize a derived component from a process when it's not there (perhaps the default?). Should that also automatically delete components when other components are deleted?
 //       This could just be to have an update that adds and removes them.
 // TODO: Write a process that removes archetypes with no components

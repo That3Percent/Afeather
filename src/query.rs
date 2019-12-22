@@ -37,7 +37,7 @@ impl<'a, RL: RefLike<Borrowed = B>, T: ReadableStorage<Read = RL>, B: BorrowedSt
             let i = self.i;
             self.i += 1;
             if let Some(candidate) = &self.archetypes[i] {
-                let storage = T::get(self.globals, &candidate.components);
+                let storage = T::get(self.globals, candidate.components());
                 if let Some(storage) = storage {
                     //self.storage = Some(storage);
                     let borrow = storage.borrow();

@@ -27,7 +27,7 @@ impl<T: CullArchetypes> Update for T {
             {
                 if let Some(storage) = archetype
                     .as_ref()
-                    .and_then(|a| T::Reads::get(world_storage, &a.components))
+                    .and_then(|a| T::Reads::get(world_storage, a.components()))
                 {
                     let borrow = storage.borrow();
                     if self.should_cull(borrow.read_batch()) {

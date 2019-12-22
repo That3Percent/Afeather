@@ -2,6 +2,8 @@ use crate::*;
 use extend_lifetime::extend_lifetime;
 use std::cell::{Ref, RefCell, RefMut};
 use std::rc::Rc;
+use unordered_hash::UnorderedHasher;
+use std::any::TypeId;
 
 // This is quite a bit smaller than one might expect from another ECS,
 // but is smaller to balance the cost that there is a larger cardinality
@@ -117,26 +119,8 @@ impl<T: EntityWriter + Component<Storage = PerEntity<T>>> ArchetypeInitializerFr
     type Component = T;
     fn initialize(component: T, archetype: &mut Archetype) {
         let storage = Self::new();
-        archetype.add_component::<T>(storage);
+        archetype.add_storage::<T>(storage);
         component.write(archetype, 0);
-    }
-}
-
-impl<T: Component<Storage = PerEntity<T>>> ArchetypeFilterFromComponentStorage for PerEntity<T> {
-    type Component = T;
-    fn includes(_component: &T, archetype: &Archetype) -> bool {
-        archetype.get_storage::<Self>().is_some()
-        /*
-        // TODO: We want to not write when at capacity, but
-        // if implemented in this way it would lead to a bug if
-        // this method is used to re-write an existing entity.
-        // Starting conservative to avoid bugs for the moment.
-        if let Some(storage) = archetype.get_storage::<T>() {
-            storage.values.borrow().len() < CAPACITY
-        } else {
-            false
-        }
-        */
     }
 }
 
@@ -152,4 +136,8 @@ impl<T: Component<Storage = PerEntity<T>>> EntityWriterFromComponentStorage for 
             values[index] = component;
         }
     }
+
+	fn add_archetype_requirements(_component: &Self::Component, hasher: &mut UnorderedHasher) {
+		hasher.add(&TypeId::of::<T>())
+	}
 }

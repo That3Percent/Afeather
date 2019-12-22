@@ -1,7 +1,8 @@
-#![allow(non_snake_case)]
+#![allow(non_snake_case, unused_variables, unused_mut)]
 
 use crate::*;
 use std::cmp::max;
+use unordered_hash::UnorderedHasher;
 
 macro_rules! tuple {
 	($($T:ident),*) => {
@@ -61,6 +62,11 @@ macro_rules! tuple {
 			fn write(self, archetype: &mut Archetype, index: usize) {
 				let ($($T,)*) = self;
 				$($T.write(archetype, index);)*
+			}
+
+			fn add_archetype_requirements(&self, hasher: &mut UnorderedHasher) {
+				let ($($T,)*) = self;
+				$($T.add_archetype_requirements(hasher);)*
 			}
 		}
 

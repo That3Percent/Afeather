@@ -2,6 +2,8 @@ use crate::*;
 use extend_lifetime::extend_lifetime;
 use std::cell::{Ref, RefCell};
 use std::rc::Rc;
+use std::hash::Hash;
+use unordered_hash::UnorderedHasher;
 
 pub struct PerArchetype<T> {
     cell: RefCell<BorrowedPerArchetype<T>>,
@@ -72,26 +74,16 @@ impl<T: Component<Storage = PerArchetype<T>>> ArchetypeInitializerFromComponentS
     type Component = T;
     fn initialize(component: T, archetype: &mut Archetype) {
         let storage = Self::new(component); // FIXME Version
-        archetype.add_component::<T>(storage);
+        archetype.add_storage::<T>(storage);
     }
 }
 
-impl<T: Component<Storage = PerArchetype<T>> + Eq> ArchetypeFilterFromComponentStorage
-    for PerArchetype<T>
-{
-    type Component = T;
-    fn includes(component: &T, archetype: &Archetype) -> bool {
-        let storage = archetype.get_storage::<Self>();
-        if let Some(storage) = storage {
-            &storage.borrow().value == component
-        } else {
-            false
-        }
-    }
-}
-
-impl<T: Component<Storage = PerArchetype<T>>> EntityWriterFromComponentStorage for PerArchetype<T> {
+impl<T: Component<Storage = PerArchetype<T>> + Hash> EntityWriterFromComponentStorage for PerArchetype<T> {
     type Component = T;
     #[inline]
     fn write(_component: T, _archetype: &mut Archetype, _index: usize) {}
+	#[inline]
+	fn add_archetype_requirements(component: &Self::Component, hasher: &mut UnorderedHasher) {
+		hasher.add(component);
+	}
 }

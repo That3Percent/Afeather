@@ -3,6 +3,7 @@ use extend_lifetime::extend_lifetime;
 use std::cell::{Ref, RefCell};
 use std::collections::HashMap;
 use std::rc::Rc;
+use unordered_hash::UnorderedHasher;
 
 pub struct Sparse<T> {
     cell: RefCell<BorrowedSparse<T>>,
@@ -90,13 +91,6 @@ impl<T: Component> WritableStorage for Sparse<T> {
 }
 */
 
-impl<T: Component<Storage = Sparse<T>>> ArchetypeFilterFromComponentStorage for Sparse<T> {
-    type Component = T;
-    #[inline]
-    fn includes(_component: &T, _archetype: &Archetype) -> bool {
-        true
-    }
-}
 
 impl<T: Component<Storage = Sparse<T>>> EntityWriterFromComponentStorage for Sparse<T> {
     type Component = T;
@@ -105,6 +99,8 @@ impl<T: Component<Storage = Sparse<T>>> EntityWriterFromComponentStorage for Spa
         let s = archetype.get_storage_mut::<Self>().unwrap();
         s.cell.borrow_mut().values.insert(index, component);
     }
+
+	fn add_archetype_requirements(component: &Self::Component, hasher: &mut UnorderedHasher) {}
 }
 
 impl<T: EntityWriter + Component<Storage = Sparse<T>>> ArchetypeInitializerFromComponentStorage
@@ -113,7 +109,7 @@ impl<T: EntityWriter + Component<Storage = Sparse<T>>> ArchetypeInitializerFromC
     type Component = T;
     fn initialize(component: T, archetype: &mut Archetype) {
         let storage = Self::new();
-        archetype.add_component::<T>(storage);
+        archetype.add_storage::<T>(storage);
         component.write(archetype, 0);
     }
 }

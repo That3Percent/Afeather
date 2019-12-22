@@ -4,6 +4,7 @@ use extend_lifetime::extend_lifetime;
 use std::cell::{Ref, RefCell, RefMut};
 use std::ops::{Deref, DerefMut};
 use std::rc::Rc;
+use unordered_hash::UnorderedHasher;
 
 pub trait AnyStorage: Downcast {
 	fn remove_entity(&self, index: usize, top: usize);
@@ -151,25 +152,11 @@ impl<
     }
 }
 
-pub trait ArchetypeFilterFromComponentStorage {
-    type Component;
-    fn includes(component: &Self::Component, archetype: &Archetype) -> bool;
-}
-
-impl<
-        S: ArchetypeFilterFromComponentStorage<Component = T> + ReadableStorage + AnyStorage,
-        T: Component<Storage = S>,
-    > ArchetypeFilter for T
-{
-    #[inline]
-    fn includes(&self, archetype: &Archetype) -> bool {
-        S::includes(self, archetype)
-    }
-}
 
 pub trait EntityWriterFromComponentStorage {
     type Component;
     fn write(component: Self::Component, archetype: &mut Archetype, index: usize);
+	fn add_archetype_requirements(component: &Self::Component, hasher: &mut UnorderedHasher);
 }
 
 impl<
@@ -181,6 +168,11 @@ impl<
     fn write(self, archetype: &mut Archetype, index: usize) {
         S::write(self, archetype, index)
     }
+
+	#[inline]
+	fn add_archetype_requirements(&self, hasher: &mut UnorderedHasher) {
+		S::add_archetype_requirements(&self, hasher)
+	}
 }
 
 mod per_entity;

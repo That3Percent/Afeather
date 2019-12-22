@@ -1,5 +1,6 @@
 use super::*;
 use std::collections::HashMap;
+use unordered_hash::UnorderedHasher;
 
 #[derive(Eq, PartialEq, Copy, Debug, Clone, Hash)]
 pub struct UniqueId(pub u128);
@@ -63,18 +64,23 @@ impl World {
     {
         let slot = self.entities.get(entity)?;
         let archetype = &self.archetypes[slot.archetype_index].as_ref();
-        let storage = T::get(&self.globals, &archetype.unwrap().components)?;
+        let storage = T::get(&self.globals, &archetype.unwrap().components())?;
         storage.borrow().read(slot.entity_index)
     }
 
-    fn add_entity_inner<T: EntityWriter + ArchetypeFilter + ArchetypeInitializer>(
+    fn add_entity_inner<T: EntityWriter + ArchetypeInitializer>(
         &mut self,
         entity: T,
     ) -> EntitySlot {
+		let mut hasher = UnorderedHasher::new();
+		entity.add_archetype_requirements(&mut hasher);
+		let requirements = hasher.finish();
+
         // First try writing it to a matching archetype
         for (slot, archetype_index) in self.archetypes.iter_mut().zip(0..std::usize::MAX) {
             if let Some(archetype) = slot {
-                if entity.includes(archetype) {
+
+                if archetype.get_requirements() == requirements {
                     let entity_index = archetype.entity_write_slot();
                     entity.write(archetype, entity_index);
                     return EntitySlot {
@@ -85,7 +91,7 @@ impl World {
             }
         }
         // If no archetype matches, create a new one.
-        let mut archetype = Archetype::new();
+        let mut archetype = Archetype::new(requirements);
         let entity_index = archetype.entity_write_slot();
         entity.initialize(&mut archetype);
 
@@ -108,7 +114,7 @@ impl World {
         }
     }
 
-    pub fn add_entity<T: EntityWriter + ArchetypeFilter + ArchetypeInitializer>(
+    pub fn add_entity<T: EntityWriter + ArchetypeInitializer>(
         &mut self,
         unique_id: UniqueId,
         entity: T,
@@ -156,7 +162,7 @@ impl World {
         for archetype in self.archetypes.iter_mut() {
             if let Some(archetype) = archetype {
                 // TODO: Just add an archetype iterator.
-                if let Some(read) = T::Reads::get(&self.globals, &archetype.components) {
+                if let Some(read) = T::Reads::get(&self.globals, archetype.components()) {
                     if let Some(write) = T::Writes::get_mut(archetype) {
                         let read_borrow = read.borrow();
                         let mut write_borrow = write.borrow_mut();
